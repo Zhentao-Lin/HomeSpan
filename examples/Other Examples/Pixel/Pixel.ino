@@ -27,8 +27,9 @@
  
 // HomeSpan Addressable RGB LED Examples.  Demonstrates use of:
 //
-//  * HomeSpan Pixel Class that provides for control of single-wire addressable RGB RGBW, and RGBWC LEDs, such as the WS2812 and SK6812
-//  * HomeSpan Dot Class that provides for control of two-wire addressable RGB LEDs, such as the APA102 and SK9822
+//  * HomeSpan Pixel Class that provides for control of single-wire addressable RGB RGBW, and RGBWC LEDs using the NeoPixel protocol, such as the WS2812 and SK6812
+//  * HomeSpan Dot Class that provides for control of two-wire addressable RGB LEDs using the DotStar protocol, such as the APA102 and SK9822
+//  * HomeSpan WS2801_LED Class that provides for control of two-wire addressable RGB LEDs using the WS2801 protocol
 //
 
 #ifndef HS_FEATHER_PINS
@@ -172,7 +173,6 @@ struct WS2801_RGB : Service::LightBulb {      // Addressable two-wire RGB WS2801
   Characteristic::Saturation S{0,true};
   Characteristic::Brightness V{100,true};
   WS2801_LED *pixel;
-//  WS2801_LED::Color *colors;
   int nPixels;
   
   WS2801_RGB(uint8_t dataPin, uint8_t clockPin, int nPixels) : Service::LightBulb(){
@@ -180,9 +180,7 @@ struct WS2801_RGB : Service::LightBulb {      // Addressable two-wire RGB WS2801
     V.setRange(5,100,1);                        // sets the range of the Brightness to be from a min of 5%, to a max of 100%, in steps of 1%
     pixel=new WS2801_LED(dataPin, clockPin);    // creates WS2801 RGB LED on specified pins
     this->nPixels=nPixels;                      // save number of Pixels in this LED Strand
-    
-//    colors=(WS2801_LED::Color *)heap_caps_calloc(nPixels,sizeof(WS2801_LED::Color),MALLOC_CAP_DMA);
-    
+        
     update();                                   // manually call update() to set pixel with restored initial values
   }
 
@@ -194,12 +192,7 @@ struct WS2801_RGB : Service::LightBulb {      // Addressable two-wire RGB WS2801
     float s=S.getNewVal<float>();       // range = [0,100]
     float v=V.getNewVal<float>();       // range = [0,100]
 
-//    for(int i=0;i<nPixels;i++)
-//      colors[i].HSV(h*p, s*p, v*p);
-
-//    pixel->set(colors,nPixels);         // sets nPixels to Colors stored in colors array
-
-    pixel->set(pixel->HSV(h*p, s*p, v*p),nPixels);
+    pixel->set(pixel->HSV(h*p, s*p, v*p),nPixels);      // sets all nPixels to the same HSV color
           
     return(true);  
   }
@@ -210,8 +203,6 @@ struct WS2801_RGB : Service::LightBulb {      // Addressable two-wire RGB WS2801
 void setup() {
   
   Serial.begin(115200);
-
-  ETH.begin(ETH_PHY_W5500, 1, F16, -1, -1, SPI2_HOST, SCK, MISO, MOSI);
  
   homeSpan.begin(Category::Lighting,"Pixel LEDS");
 
