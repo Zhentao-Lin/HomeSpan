@@ -281,7 +281,28 @@ void WS2801_LED::setTiming(uint32_t freq){
 
 ///////////////////
 
-void WS2801_LED::transmit(Color *c, size_t nPixels, boolean multiColor){
+WS2801_LED::Color *WS2801_LED::getMem(size_t nPixels){
+
+  return((Color *)heap_caps_calloc(nPixels,sizeof(Color),MALLOC_CAP_DMA));
+}
+
+///////////////////
+
+void WS2801_LED::set(Color c, size_t nPixels){
+
+  Color *colors=getMem(nPixels);
+  
+  if(colors!=NULL){
+    for(int i=0;i<nPixels;i++)
+      colors[i]=c;
+    transmit(colors,nPixels);
+    free(colors);
+  }
+}
+
+///////////////////
+
+void WS2801_LED::transmit(Color *c, size_t nPixels){
   
   if(nPixels==0)
     return;

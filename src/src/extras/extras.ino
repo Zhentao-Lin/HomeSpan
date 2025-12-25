@@ -43,9 +43,10 @@ void setup() {
   p1=new WS2801_LED(F14, F22);
   p2=new WS2801_LED(F27, F23);
 
-  red=(WS2801_LED::Color *)heap_caps_calloc(25,sizeof(WS2801_LED::Color),MALLOC_CAP_DMA);   
-  blue=(WS2801_LED::Color *)heap_caps_calloc(25,sizeof(WS2801_LED::Color),MALLOC_CAP_DMA);   
-  green=(WS2801_LED::Color *)heap_caps_calloc(25,sizeof(WS2801_LED::Color),MALLOC_CAP_DMA);   
+  red=WS2801_LED::getMem(25);
+  blue=p1->getMem(25);
+  green=p1->getMem(25);
+
   for(int i=0;i<25;i++){
     red[i].RGB(255,0,0);
     blue[i].RGB(0,0,255);
@@ -58,6 +59,6 @@ void loop() {
   delay(1000);
   p2->set(green,25);
   delay(1000);
-  p1->set(blue,25);
+  p1->set(WS2801_LED::RGB(255,255,0),1300);
   delay(1000);    
 }
