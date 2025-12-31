@@ -225,7 +225,21 @@ The two main methods to set pixel colors are:
 
   * individually sets the color of each pixel in a multi-pixel device to the color values specified in the **Color** array *\*color*, of *nPixels* size, where the  first pixel of the device is set to the value in *color\[0\]*, the second pixel is set to the value in *color\[1\]* ... and the last pixel is set to the value in *color\[nPixels-1\]*.  Similar to above, it is not a problem if the value specified for *nPixels* does not match the total number of actual RGB pixels in your device
 
-In both of the methods above, colors are stored in a 24-bit **Color** object configured to hold three 8-bit RGB values.  **Color** objects can be instantiated as single variables (e.g. `WS2801_LED::Color myColor;`) or as *pointers* to arrays (e.g. `WS2801_LED::Color *myColors;`), though see below for important details when using arrays.  Note that the **Color** object used by the **WS2801_LED** class is scoped to the **WS2801_LED** class itself, so you need to use the fully-qualified class name "WS2801_LED::Color".  Once a **Color** object is created, the color it stores can be set using one of the two following methods:
+In both of the methods above, colors are stored in a 24-bit **Color** object configured to hold three 8-bit RGB values.  **Color** objects can be instantiated as single variables (e.g. `WS2801_LED::Color myColor;`) but they should NOT be directly instantiated as simple array variables (e.g. `WS2801_LED::Color myColors[8];`).  This is because the **WS2801_LED** requires the DMA features of the SPI bus to ensure color data is properly transmitted to the LEDs, and thus the **Color** array must be created in 32-bit aligned, DMA-capable memory.
+
+The ESP32 operating system provides two ways of creating variables stored in 32-bit aligned DMA-capable memory.  The first is to add the attribute `DMA_ATTR` to the instantation of a simple array as follows: `DMA_ATTR WS2801_LED::Color c[5];`.
+
+However, this attribute can only be used when creating global variables outside of any function. The `DMA_ATTR` cannot be used for local variables since local variables are added to the stack during run-time and there is no way for the operating system to guarantee 32-bit alignment.  Instead, to create a local array of **Color** objects using 32-bit aligned DMA-capable memory, instantiate a *pointer* to a **Color** array and set it equal to the memory segment returned by the following static class function:
+
+* `static Color *WS2801_LED::getMem(size_t nPixels)`
+
+  * returns a pointer to a dynamically-allocated 32-bit aligned segment of DMA-capable memory sized to store *nPixels* of **Color** objects
+  * example: `WS2801_LED::Color *myColors=getMem(8)` sets *myColors* to an array of 8 **Color** objects (*myColor\[0\], myColor\[1\] ... myColor\[8\]*)
+  * remember that as with any dynamically-allocated memory, it must to freed (e.g. `free(myColors);`) when no longer needed.  Such memory is not automatically destroyed when the end of the function is reached!
+
+Note that the **Color** object used by the **WS2801_LED** class is scoped to the **WS2801_LED** class itself, so you need to use the fully-qualified class name "WS2801_LED::Color" when creating Color variables.
+
+Once a **Color** object is created, the color it stores can be set using one of the two following methods:
   
   * `Color RGB(uint8_t r, uint8_t g, uint8_t b)`
 
@@ -248,6 +262,13 @@ The **WS2801_LED** class also supports the following class-level methods as a co
 * `static Color HSV(float h, float s, float v)`
   * equivalent to `return(Color().HSV(h,s,v));`
   * example: `WS2801_LED p(8,11);  p.set(WS2801_LED::HSV(240,100,75),8);` sets the color of each pixel in an 8-pixel device to deep blue at 75% brightness
+ 
+Of final note, *WS2801* devices have much slower refresh rates then *DotStar devices.  By default, the **WS2801_LED** class set the SPI clock frequency to 2MHz for each instantiated object, which matches the specs for the WS2801 chip.  However, if needed you can set a different SPI clock frequency for any given **WS2801_LED** object using the following *member-based* method:
+
+* `void setTiming(uint32_t freq)`
+
+  * sets the pixel transmission frequency to *freq* (in Hz)
+  * example: `WS2801_LED p(8,11); p.setTiming(1000000); p.set(WS2801_LED::RGB(0,0,255),8);` changes the transmission frequency to 1MHz before setting the color of each pixel in an 8-pixel device to blue
 
 #### SPI Busses, Arrays, and Clock Frequency
 
@@ -273,10 +294,7 @@ As noted above, to ensure data transmission occurs completely in hardware withou
 
 Of final note, *WS2801* devices have a much slower refresh rate than *DotStar* devices. To ensure data is transmitted at the proper speed, the *WS2801_LED** class sets the SPI clock frequency to 2MHz when transmitting pixel data (this does not impact the clock frequency for any other SPI devices).  You may override this frequency for any **WS2801_LED** object using the following method:
 
-* `void setTiming(uint32_t freq)`
 
-  * sets the pixel transmission frequency to *freq* (in Hz)
-  * example: `WS2801_LED p(8,11); p.setTiming(1000000); p.set(WS2801_LED::RGB(0,0,255),8);` changes the transmission frequency to 1MHz before setting the color of each pixel in an 8-pixel device to blue
 
 ### Example Sketches
 
