@@ -231,10 +231,10 @@ The ESP32 operating system provides two ways of creating variables stored in 32-
 
 However, this attribute can only be used when creating global variables outside of any function. The `DMA_ATTR` cannot be used for local variables since local variables are added to the stack during run-time and there is no way for the operating system to guarantee 32-bit alignment.  Instead, to create a local array of **Color** objects using 32-bit aligned DMA-capable memory, instantiate a *pointer* to a **Color** array and set it equal to the memory segment returned by the following static class function:
 
-* `static Color *WS2801_LED::getMem(size_t nPixels)`
+* `static Color *getMem(size_t nColors)`
 
-  * returns a pointer to a dynamically-allocated 32-bit aligned segment of DMA-capable memory sized to store *nPixels* of **Color** objects
-  * example: `WS2801_LED::Color *myColors=getMem(8)` sets *myColors* to an array of 8 **Color** objects (*myColor\[0\], myColor\[1\] ... myColor\[8\]*)
+  * returns a **Color** pointer to a dynamically-allocated 32-bit aligned segment of DMA-capable memory sized for *nColors* objects
+  * example: `WS2801_LED::Color *myColors = WS2801_LED::getMem(8)` sets *myColors* to an array of 8 **Color** objects
   * remember that as with any dynamically-allocated memory, it must to freed (e.g. `free(myColors);`) when no longer needed.  Such memory is not automatically destroyed when the end of the function is reached!
 
 Note that the **Color** object used by the **WS2801_LED** class is scoped to the **WS2801_LED** class itself, so you need to use the fully-qualified class name "WS2801_LED::Color" when creating Color variables.
@@ -263,7 +263,7 @@ The **WS2801_LED** class also supports the following class-level methods as a co
   * equivalent to `return(Color().HSV(h,s,v));`
   * example: `WS2801_LED p(8,11);  p.set(WS2801_LED::HSV(240,100,75),8);` sets the color of each pixel in an 8-pixel device to deep blue at 75% brightness
  
-Of final note, *WS2801* devices have much slower refresh rates then *DotStar devices.  By default, the **WS2801_LED** class set the SPI clock frequency to 2MHz for each instantiated object, which matches the specs for the WS2801 chip.  However, if needed you can set a different SPI clock frequency for any given **WS2801_LED** object using the following *member-based* method:
+Of final note, *WS2801* devices have much slower refresh rates then *DotStar* devices.  By default, the **WS2801_LED** class set the SPI clock frequency to 2MHz for each instantiated object, which matches the specs for the WS2801 chip.  However, if needed you can set a different SPI clock frequency for any given **WS2801_LED** object using the following *member-based* method:
 
 * `void setTiming(uint32_t freq)`
 
