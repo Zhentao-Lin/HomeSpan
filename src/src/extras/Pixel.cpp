@@ -261,6 +261,13 @@ WS2801_LED::WS2801_LED(uint8_t dataPin, uint8_t clockPin, spi_host_device_t host
 
   buscfg.mosi_io_num=dataPin;
   buscfg.sclk_io_num=clockPin;
+  buscfg.miso_io_num = -1;
+  buscfg.data2_io_num = -1;
+  buscfg.data3_io_num = -1;
+  buscfg.data4_io_num = -1;
+  buscfg.data5_io_num = -1;
+  buscfg.data6_io_num = -1;
+  buscfg.data7_io_num = -1;
   
   devcfg.clock_speed_hz = 2 * 1000 * 1000;
   devcfg.spics_io_num = -1;
